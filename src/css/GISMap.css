@@ -1,4 +1,5 @@
-#mapDiv {
+/* -------- Map -------- */
+.mapDiv {
   padding: 0;
   margin: 0;
   height: 100vh;
@@ -10,7 +11,16 @@
   height: 100%;
   width: 100%;
 }
-#srDiv{
-  height: 40px;
-  padding: 10px;
+/* -------- End Map -------- */
+
+/* -------- Layers Widget -------- */
+.labelText {
+  padding: 5px;
+  font-size: 18px;
 }
+
+#layWidgetDiv {
+  padding: 8px;
+}
+
+/* -------- Layers Widget -------- */
