@@ -7,6 +7,7 @@ import { renderIntoDocument } from 'react-dom/test-utils';
 import SimpleRenderer from '@arcgis/core/renderers/SimpleRenderer';
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import LabelClass from "@arcgis/core/layers/support/LabelClass";
+import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 
 function GISMap() {
   const viewDiv = useRef();
@@ -52,6 +53,43 @@ function GISMap() {
       })]
     });
     map.add(wardLayer);
+
+    const fireStationsLayer = new FeatureLayer({
+      url: "https://services6.arcgis.com/hM5ymMLbxIyWTjn2/arcgis/rest/services/City_Fire_Stations/FeatureServer/0",
+      renderer: new SimpleRenderer({
+        symbol: new SimpleMarkerSymbol({
+          color: "red",
+          size: "10px"
+        })
+      })
+    });
+    
+    const librariesLayer = new FeatureLayer({
+      url: "https://services6.arcgis.com/hM5ymMLbxIyWTjn2/ArcGIS/rest/services/City_Libraries/FeatureServer/0",
+      renderer: new SimpleRenderer({
+        symbol: new SimpleMarkerSymbol({
+          color: "blue",
+          style: "square",
+          size: "10px"
+        })
+      })
+    });
+    
+    const communityCentresLayer = new FeatureLayer({
+      url: "https://services6.arcgis.com/hM5ymMLbxIyWTjn2/ArcGIS/rest/services/City_Community_Centres/FeatureServer/0",
+      renderer: new SimpleRenderer({
+        symbol: new SimpleMarkerSymbol({
+          color: "green",
+          style: "circle",
+          size: "10px"
+        })
+      })
+    });
+    
+    map.add(fireStationsLayer);
+    map.add(librariesLayer);
+    map.add(communityCentresLayer);
+    
 
     view.when(() => {
       view.extent = wardLayer.fullExtent;
