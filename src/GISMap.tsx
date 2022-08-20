@@ -8,6 +8,12 @@ import SimpleRenderer from '@arcgis/core/renderers/SimpleRenderer';
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import LabelClass from "@arcgis/core/layers/support/LabelClass";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
+import Popup from "@arcgis/core/widgets/Popup";
+import { addListener } from 'process';
+import Query from "@arcgis/core/rest/support/Query";
+import PopupTemplate from "@arcgis/core/PopupTemplate";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
+import * as geometryEngine from "@arcgis/core/geometry/geometryEngine";
 
 function GISMap() {
 
@@ -61,7 +67,11 @@ function GISMap() {
         labelExpressionInfo: {
           expression: "$feature.COUNCILLOR"
         }
-      })]
+      })],
+      popupTemplate: {
+        title: "{WARD}",
+        content: ShowWardInfo
+      }
     });
     map.add(wardLayer);
 
@@ -104,6 +114,37 @@ function GISMap() {
     map.add(communityCentresLayer);
 
     view.ui.add(document.getElementById("layWidgetDiv"), "bottom-right");
+
+    //Function which populates the Popup
+    function ShowWardInfo() {
+      let totalCount: number = 0;
+      alert(view.popup.selectedFeature.geometry);
+      //reactiveUtils.when(() => view.popup.selectedFeature?.geometry != null, () => {
+        const FSQuery = new Query({
+          spatialRelationship: "contains",
+          geometry: view.popup.selectedFeature.geometry,
+          where: "",
+          returnGeometry: true
+        });
+        console.log(view.popup.selectedFeature.geometry);
+        return fireStationsLayer.queryObjectIds(FSQuery)
+          .then((results) => {
+            totalCount += results.length;
+            console.log(totalCount);
+            return librariesLayer.queryObjectIds(FSQuery)
+              .then((results) => {
+                totalCount += results.length;
+                console.log(totalCount);
+                return communityCentresLayer.queryObjectIds(FSQuery)
+                  .then((results) => {
+                    totalCount += results.length;
+                    console.log(totalCount);
+                    return "<div style='background-color:DarkGray;color:white'><label>" + totalCount + " facilities found</label></div>";
+                  });
+              });
+          });
+      //});
+    }
 
     view.when(() => {
       view.extent = wardLayer.fullExtent;
