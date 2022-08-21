@@ -3,15 +3,11 @@ import './css/GISMap.css';
 import Map from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
-import { renderIntoDocument } from 'react-dom/test-utils';
 import SimpleRenderer from '@arcgis/core/renderers/SimpleRenderer';
 import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import LabelClass from "@arcgis/core/layers/support/LabelClass";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
-import Popup from "@arcgis/core/widgets/Popup";
-import { addListener } from 'process';
 import Query from "@arcgis/core/rest/support/Query";
-import PopupTemplate from "@arcgis/core/PopupTemplate";
 
 function GISMap() {
 
@@ -81,7 +77,8 @@ function GISMap() {
           size: "10px"
         })
       }),
-      visible: false
+      visible: false,
+      definitionExpression: ""
     });
 
     const librariesLayer = new FeatureLayer({
@@ -93,7 +90,8 @@ function GISMap() {
           size: "10px"
         })
       }),
-      visible: false
+      visible: false,
+      definitionExpression: ""
     });
 
     const communityCentresLayer = new FeatureLayer({
@@ -105,7 +103,8 @@ function GISMap() {
           size: "10px"
         })
       }),
-      visible: false
+      visible: false,
+      definitionExpression: ""
     });
     map.add(fireStationsLayer);
     map.add(librariesLayer);
@@ -116,6 +115,7 @@ function GISMap() {
     //Function which populates the Popup
     function ShowWardInfo() {
       let totalCount: number = 0;
+
       const FSQuery = new Query({
         spatialRelationship: "contains",
         geometry: view.popup.selectedFeature.geometry,
@@ -124,13 +124,26 @@ function GISMap() {
 
       return fireStationsLayer.queryObjectIds(FSQuery)
         .then((results) => {
-          totalCount += results.length;
           return librariesLayer.queryObjectIds(FSQuery)
-            .then((results) => {
-              totalCount += results.length;
+            .then((results1) => {
               return communityCentresLayer.queryObjectIds(FSQuery)
-                .then((results) => {
+                .then((results2) => {
+                  
                   totalCount += results.length;
+                  //let expression = "FID IN (" + results.map((FID) => (FID)).join(",") + ")";
+                  let expression = results.length > 0 ? "FID IN (" + results.map((FID) => (FID)).join(",") + ")" : "FID is null";
+                  fireStationsLayer.definitionExpression = expression;
+                  
+                  totalCount += results1.length;
+                  //expression = "FID IN (" + results1.map((FID) => (FID)).join(",") + ")";
+                  expression = results1.length > 0 ? "FID IN (" + results1.map((FID) => (FID)).join(",") + ")" : "FID is null";
+                  librariesLayer.definitionExpression = expression;
+
+                  totalCount += results2.length;
+                  //expression = "FID IN (" + results2.map((FID) => (FID)).join(",") + ")";
+                  expression = results2.length > 0 ? "FID IN (" + results2.map((FID) => (FID)).join(",") + ")" : "FID is null";
+                  communityCentresLayer.definitionExpression = expression;
+
                   return "<div style='background-color:DarkGray;color:white'><label>" + totalCount + " facilities found</label></div>";
                 });
             });
