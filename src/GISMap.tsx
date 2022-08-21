@@ -12,8 +12,6 @@ import Popup from "@arcgis/core/widgets/Popup";
 import { addListener } from 'process';
 import Query from "@arcgis/core/rest/support/Query";
 import PopupTemplate from "@arcgis/core/PopupTemplate";
-import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
-import * as geometryEngine from "@arcgis/core/geometry/geometryEngine";
 
 function GISMap() {
 
@@ -49,7 +47,7 @@ function GISMap() {
     });
 
     const wardLayer = new FeatureLayer({
-      url: "https://services6.arcgis.com/hM5ymMLbxIyWTjn2/arcgis/rest/services/Ward_Boundaries/FeatureServer/2",
+      url: "https://services6.arcgis.com/hM5ymMLbxIyWTjn2/arcgis/rest/services/Ward_Shapes/FeatureServer/0", //alternative ward boundary, the main one was causing issues with a null popup.selectedgeometry
       renderer: new SimpleRenderer({
         symbol: new SimpleFillSymbol({
           color: [0, 0, 0, 0],
@@ -69,7 +67,7 @@ function GISMap() {
         }
       })],
       popupTemplate: {
-        title: "{WARD}",
+        title: "Ward Boundary - " + "{COUNCILLOR}",
         content: ShowWardInfo
       }
     });
@@ -118,32 +116,25 @@ function GISMap() {
     //Function which populates the Popup
     function ShowWardInfo() {
       let totalCount: number = 0;
-      alert(view.popup.selectedFeature.geometry);
-      //reactiveUtils.when(() => view.popup.selectedFeature?.geometry != null, () => {
-        const FSQuery = new Query({
-          spatialRelationship: "contains",
-          geometry: view.popup.selectedFeature.geometry,
-          where: "",
-          returnGeometry: true
+      const FSQuery = new Query({
+        spatialRelationship: "contains",
+        geometry: view.popup.selectedFeature.geometry,
+        where: ""
+      });
+
+      return fireStationsLayer.queryObjectIds(FSQuery)
+        .then((results) => {
+          totalCount += results.length;
+          return librariesLayer.queryObjectIds(FSQuery)
+            .then((results) => {
+              totalCount += results.length;
+              return communityCentresLayer.queryObjectIds(FSQuery)
+                .then((results) => {
+                  totalCount += results.length;
+                  return "<div style='background-color:DarkGray;color:white'><label>" + totalCount + " facilities found</label></div>";
+                });
+            });
         });
-        console.log(view.popup.selectedFeature.geometry);
-        return fireStationsLayer.queryObjectIds(FSQuery)
-          .then((results) => {
-            totalCount += results.length;
-            console.log(totalCount);
-            return librariesLayer.queryObjectIds(FSQuery)
-              .then((results) => {
-                totalCount += results.length;
-                console.log(totalCount);
-                return communityCentresLayer.queryObjectIds(FSQuery)
-                  .then((results) => {
-                    totalCount += results.length;
-                    console.log(totalCount);
-                    return "<div style='background-color:DarkGray;color:white'><label>" + totalCount + " facilities found</label></div>";
-                  });
-              });
-          });
-      //});
     }
 
     view.when(() => {
